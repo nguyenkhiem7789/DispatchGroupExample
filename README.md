@@ -1,89 +1,20 @@
+Giả sử bạn có 2 tasks bất đồng bộ trên 2 tiến trình riêng biệt, bạn muốn sau khi 2 tasks này được thực hiện xong thì thực hiện 1 tác vụ nào đó như hiển thị thông báo lên màn hình. Lúc này bạn có thể sử dụng Dispatch Group để thực hiện được điều đó. Dispatch Group sẽ chờ cho đến khi có tín hiệu thực hiện xong các tasks và sẽ thực hiện task tiếp theo.
 
-    import UIKit
-
-    class ViewController: UIViewController {
-
-        let groupA = ["user 1", "user 2"]
-        let groupB = ["user 3", "user 4"]
-        let groupC = ["user 5", "user 6"]
-
-        var users = [String]()
+ Ví dụ:
 
         let dispatchGroup = DispatchGroup()
-
-        @IBOutlet weak var tableView: UITableView!
-
-        override func viewDidLoad() {
-            super.viewDidLoad()
-            tableView.dataSource = self
+        
+        dispatchGroup.enter()
+        taskOne { dispatchGroup.leave() }
+        
+        dispatchGroup.enter()
+        taskTwo { dispatchGroup.leave() }
+        
+        dispatchGroup.notify(queue: .main) {
+            print("Both tasks complete ")
         }
 
-        func getGroupA() {
-            dispatchGroup.enter()
-            run(after: 2) {
-                print("got A")
-                self.users.append(contentsOf: self.groupA)
-                self.dispatchGroup.leave()
-            }
-        }
+Khi số lượng hàm leave() được gọi bằng số lượng hàm enter(), hàm notify() sẽ được gọi.
 
-        func getGroupB() {
-            dispatchGroup.enter()
-            run(after: 4) {
-                print("got B")
-                self.users.append(contentsOf: self.groupB)
-                self.dispatchGroup.leave()
-            }
-        }
+Ngoài ra bạn có thể dùng hàm wait(timeout: ) thay cho hàm notify nếu bạn muốn chỉ định chờ trong một khoảng thời gian nhất định, nếu vượt quá thời gian đó mà vẫn chưa thực hiện xong các async tasks thì thực thi code trong hàm wait
 
-        func getGroupC() {
-            dispatchGroup.enter()
-            run(after: 6) {
-                print("got C")
-                self.users.append(contentsOf: self.groupC)
-                self.dispatchGroup.leave()
-            }
-        }
-
-        func displayUsers() {
-            print("reloading data")
-            tableView.reloadData()
-        }
-
-        func run(after seconds: Int, completion: @escaping () -> Void) {
-            let deadline = DispatchTime.now() + .seconds(seconds)
-            DispatchQueue.main.asyncAfter(deadline: deadline) {
-                completion()
-            }
-        }
-
-        @IBAction func onDownloadTapped(_ sender: Any) {
-            print("downloading")
-            getGroupA()
-            getGroupB()
-            getGroupC()
-            dispatchGroup.notify(queue: .main) {
-                self.tableView.reloadData()
-            }
-            displayUsers()
-        }
-
-    }
-
-    extension ViewController: UITableViewDataSource {
-
-        func numberOfSections(in tableView: UITableView) -> Int {
-            return 1
-        }
-
-        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-            return users.count
-        }
-
-        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            let cell = UITableViewCell()
-            cell.textLabel?.text = users[indexPath.row]
-            return cell
-        }
-
-    }
