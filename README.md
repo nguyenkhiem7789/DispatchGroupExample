@@ -1,10 +1,3 @@
-//
-//  ViewController.swift
-//  GroupGCDTest
-//
-//  Created by Nguyen on 5/12/20.
-//  Copyright © 2020 Apple. All rights reserved.
-//
 
     import UIKit
 
